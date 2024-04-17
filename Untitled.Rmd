@@ -1,0 +1,97 @@
+---
+title: "Preliminary Assessment of the Dataset"
+author: "John Ramírez, JR Engineering Company"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Exploración Inicial de Datos
+
+### Preliminares
+Este chunk de código se ejecuta al principio pero no se incluye en el documento final. Primero, establece la opción echo = TRUE para que todos los códigos se muestren en el documento. Luego, carga la biblioteca tidyverse, que contiene varias herramientas para análisis de datos. Finalmente, lee el archivo de datos CSV llamado "murders.csv" y lo guarda en el objeto "data".
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+data <- read.csv("./data/murders.csv")
+```
+
+
+### Visualización Inicial
+
+Se muestra las primeras filas del conjunto de datos con head(data) y la estructura del conjunto de datos con str(data). Esto permite una inspección inicial de los datos.
+
+```{r vi}
+head(data)
+str(data)
+```
+### Resumen Estadístico
+
+Se proporciona un resumen estadístico de las variables numéricas en el conjunto de datos utilizando la función summary().
+
+```{r rs}
+summary(data)
+```
+
+### Visualización de Variables Numéricas
+
+Se crea histogramas y diagramas de caja para las variables "total" (número total de homicidios) y "population" (población). Los histogramas muestran la distribución de los datos, mientras que los diagramas de caja muestran la dispersión y los valores atípicos.
+
+```{r vd, echo=TRUE}
+
+#### Histogramas: Histograms provide a visual representation of the distribution of a numerical variable. They display the frequency of data points falling within certain intervals.
+
+hist(data$total, main = "Histogram of Total Murders", xlab = "Total Murders", ylab = "Frequency", col = "skyblue")
+hist(data$population / 10^6, main = "Histogram of Population (in millions)", xlab = "Population (in millions)", ylab = "Frequency", col = "lightgreen")
+
+#### Boxplots: The boxplots provide a visual summary of the distribution of the data. They display the median, quartiles, and potential outliers.
+
+boxplot(data$total, main = "Boxplot of Total Murders", ylab = "Total Murders", col = "salmon")
+boxplot(data$population / 10^6, main = "Boxplot of Population (in millions)", ylab = "Population (in millions)", col = "lightblue")
+
+```
+
+### Visualización de Relaciones
+
+Se crea un gráfico de dispersión para explorar la relación entre "total" (número total de homicidios) y "population" (población). Se divide la población por 10^5 para escalar los valores a un rango más manejable.
+
+```{r vr, echo = TRUE}
+plot(data$population/10^5, data$total, xlab = "Population (in hundreds of thousands)", 
+     ylab = "Total Murders",
+     main = "Scatter plot of Total Murders vs Population",
+     col = "darkblue",
+     pch = 19)
+```
+
+### Tabla de Contingencia
+
+Se crea una tabla de contingencia que muestra la frecuencia de combinaciones entre las variables "abb" (abreviaturas de estados) y "region" (región geográfica).
+
+```{r conjunta, echo=TRUE}
+table (data$abb, data$region)
+```
+
+### Visualización con ggplot2
+
+Se utiliza la biblioteca ggplot2 para crear una visualización de la relación entre "abb" (abreviaturas de estados) y "total" (número total de homicidios). Primero, se realizan algunas transformaciones en los datos, como convertir la variable "region" en un factor, calcular la tasa de homicidios por cada 100,000 habitantes y reordenar las abreviaturas de estado según la tasa de homicidios. 
+
+Luego, se crea un gráfico de dispersión con ggplot(), donde los puntos representan cada estado y la tasa de homicidios se muestra en el eje y. Se aplican algunas personalizaciones de estilo, como rotar las etiquetas del eje x y voltear los ejes y colocar leyendas para cada eje y un titulo para la gráfica.
+
+```{r vis, echo = TRUE}
+
+data <- data %>% mutate(region = factor (region), rate = total / population * 10^5) %>% mutate(abb = reorder(abb, rate))
+
+ggplot(data, aes (x=abb, y=rate )) + geom_point(color = "darkred", size = 3, alpha = 0.7) +   
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
+  coord_flip() +
+  labs(x = "State Abbreviations", 
+       y = "Murder Rate (per 100,000 people)",
+       title = "Murder Rate Variation Across States")
+```
+
+### Referencias
+Dataset: "https://raw.githubusercontent.com/rafalab/dslabs/master/inst/extdata/murders.csv"
+
+
